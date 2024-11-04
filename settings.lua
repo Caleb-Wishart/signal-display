@@ -1,7 +1,7 @@
 data:extend({
     {
         type = "int-setting",
-        name = "cde-update-nth-tick",
+        name = "sigd-update-nth-tick",
         order = "aa",
         setting_type = "runtime-global",
         default_value = 4,
@@ -10,7 +10,7 @@ data:extend({
     },
     {
         type = "int-setting",
-        name = "cde-updates-per-tick",
+        name = "sigd-updates-per-tick",
         order = "ab",
         setting_type = "runtime-global",
         default_value = 10,
@@ -19,7 +19,7 @@ data:extend({
     },
     {
         type = "bool-setting",
-        name = "cde-search-rich-text",
+        name = "sigd-search-rich-text",
         order = "ac",
         setting_type = "runtime-global",
         default_value = false, -- disable this if you're experiencing lag spikes

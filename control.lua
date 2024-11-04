@@ -85,12 +85,12 @@ function circuit_display.on_tick(e)
     -- find the next display to update (on an active surface)
     repeat
       unit_number, display = next(storage.displays, storage.display_index)
+      storage.display_index = unit_number
       if unit_number == nil then
         storage.display_index = nil
         return
       end
     until display and storage.surfaces[display.surface.index]
-    storage.display_index = unit_number
     if validate(display) then
       update_display(display)
     else
@@ -130,7 +130,7 @@ function circuit_display.on_init()
   storage.display_signals = {}
   storage.surfaces = {}
   storage.display_index = nil
-  storage.search_rich_text = settings.global["cde-search-rich-text"].value
+  storage.search_rich_text = settings.global["sigd-search-rich-text"].value
   --  find any existing displays
   for _, surface in pairs(game.surfaces) do
     register_surface_displays(surface)
@@ -142,10 +142,10 @@ function circuit_display.on_init()
     storage.surfaces[player.surface.index] = player.connected
   end
   --  set up the update tick
-  storage.updates_per_tick = settings.global["cde-updates-per-tick"].value
-  storage.update_nth_tick = settings.global["cde-update-nth-tick"].value
+  storage.updates_per_tick = settings.global["sigd-updates-per-tick"].value
+  storage.update_nth_tick = settings.global["sigd-update-nth-tick"].value
   if storage.update_nth_tick == 1 then
-    storage.updates_per_tick = settings.global["cde-updates-per-tick"].value
+    storage.updates_per_tick = settings.global["sigd-updates-per-tick"].value
   else
     storage.updates_per_tick = 1
   end
@@ -156,7 +156,7 @@ end
 local function surface_has_players(surface)
   local characters = surface.find_entities_filtered { type = "character" }
   for _, character in pairs(characters) do
-    if character.player and character.player.connected then
+    if character.player and character.player.connected and character.player.surface_index == surface.index then
       return true
     end
   end
@@ -230,26 +230,26 @@ end
 --- @param e EventData.on_runtime_mod_setting_changed
 function circuit_display.on_settings_changed(e)
   if not e then return end
-  if e.setting == "cde-updates-per-tick" then
+  if e.setting == "sigd-updates-per-tick" then
     -- only update if the update nth tick is 1
     if storage.update_nth_tick == 1 then
-      storage.updates_per_tick = settings.global["cde-updates-per-tick"].value
+      storage.updates_per_tick = settings.global["sigd-updates-per-tick"].value
     else
       storage.updates_per_tick = 1
     end
   end
-  if e.setting == "cde-update-nth-tick" then
-    storage.update_nth_tick = settings.global["cde-update-nth-tick"].value
+  if e.setting == "sigd-update-nth-tick" then
+    storage.update_nth_tick = settings.global["sigd-update-nth-tick"].value
     if storage.update_nth_tick == 1 then
-      storage.updates_per_tick = settings.global["cde-updates-per-tick"].value
+      storage.updates_per_tick = settings.global["sigd-updates-per-tick"].value
     else
       storage.updates_per_tick = 1
     end
     script.on_nth_tick(nil)
     script.on_nth_tick(storage.update_nth_tick, circuit_display.on_tick)
   end
-  if e.setting == "cde-search-rich-text" then
-    storage.search_rich_text = settings.global["cde-search-rich-text"].value
+  if e.setting == "sigd-search-rich-text" then
+    storage.search_rich_text = settings.global["sigd-search-rich-text"].value
   end
 end
 
