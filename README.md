@@ -21,7 +21,7 @@ These displays can also be have the "Show in chart" option enabled to display th
 Using these features it is possible to create easy displays to see view your space platform's current speed, the amount of fuel, or whatever you desire. The possibilities are endless!
 
 ![Space Platform Display](https://github.com/Caleb-Wishart/signal-display/raw/master/resources/space-platform-example.mp4)
-![Space Platform Configuration](https://github.com/Caleb-Wishart/signal-display/raw/master/resources/map-view.png)
+![Space Platform Configuration](https://github.com/Caleb-Wishart/signal-display/raw/master/resources/ship-config.png)
 
 Using the rich text formatting you can view the amount of multiple key items using a single display.
 
