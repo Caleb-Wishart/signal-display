@@ -7,26 +7,42 @@ end
 
 -- Register a dispaly for updates with the mod
 local function add_display(display)
+  local surface_index = display.surface.index
   if not storage.displays then
     storage.displays = {}
   end
-  storage.displays[display.unit_number] = display
+
+  if not storage.displays[surface_index] then
+    storage.displays[surface_index] = {}
+  end
+
+  storage.displays[surface_index][display.unit_number] = display
   storage.display_signals[display.unit_number] = {}
 end
 
 -- Remove a display from the mod updates
 local function remove_display(display)
+  if not display.unit_number or not display.surface then return end
   if not storage.displays then return end
-  if not display.unit_number then return end
-  storage.displays[display.unit_number] = nil
+
+  local surface_index = display.surface.index
+  if not storage.displays[surface_index] then return end
+  storage.displays[surface_index][display.unit_number] = nil
+
   if not storage.display_signals then return end
   storage.display_signals[display.unit_number] = nil
+
+  -- if this was the last display on the surface, restart from begining
+  if storage.display_index[surface_index] == display.unit_number then
+    storage.display_index[surface_index] = nil
+  end
 end
 
 -- get last signal from a dispaly that was cached or -1 if not found
 local function get_last_signal(display, signal)
-  if not storage.displays or not storage.display_signals then return -1 end
-  if not storage.display_signals[display.unit_number] then return -1 end
+  if not storage.display_signals or not storage.display_signals[display.unit_number] then
+    return -1
+  end
   return storage.display_signals[display.unit_number][signal] or -1
 end
 
@@ -34,16 +50,19 @@ end
 local function update_display(display)
   local control = display.get_or_create_control_behavior()
   if not control then return end
+
   for i, message in pairs(control.messages) do
     local text = message.text
     if not text or (message.condition and message.condition.fulfilled == false) then goto next_message end
     local n = 0
     local updated = false
+
     -- Update based on icons
     local icon = message.icon
     local icon_name = icon and icon.name or "unset"
     local signal = icon_name ~= "unset" and display.get_signal(icon, defines.wire_connector_id.circuit_green,
       defines.wire_connector_id.circuit_red) or 0
+
     if signal ~= get_last_signal(display, icon_name) then
       storage.display_signals[display.unit_number][icon_name] = signal
       text, n = text:gsub("%[%d*%]", "[" .. signal .. "]", 1)
@@ -51,6 +70,7 @@ local function update_display(display)
         updated = true
       end
     end
+
     -- Update based on rich text
     if storage.search_rich_text then
       for typ, value in text:gmatch("%[([%w%-]+)=([%w%-]+)]") do
@@ -59,10 +79,12 @@ local function update_display(display)
         if typ == "virtual-signal" then typ = "virtual" end
         signal = display.get_signal({ name = value, type = typ }, defines.wire_connector_id.circuit_green,
           defines.wire_connector_id.circuit_red)
+
         if value ~= icon_name and signal == get_last_signal(display, value) then
           goto next_match
         end
         storage.display_signals[display.unit_number][value] = signal
+
         text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[%d*%])", "%1[" .. signal .. "]", 1)
         if n > 0 then
           updated = true
@@ -81,21 +103,26 @@ end
 --- @param e EventData.on_tick
 function circuit_display.on_tick(e)
   for _ = 1, storage.updates_per_tick, 1 do
+    local surface_index, active = nil, nil
+    -- find the next active surface to update
+    repeat
+      surface_index, active = next(storage.surfaces, storage.surface_index)
+      storage.surface_index = surface_index
+      if surface_index == nil then
+        return
+      end
+    until active and storage.displays[surface_index] ~= nil
+
     local unit_number, display = nil, nil
     -- find the next display to update (on an active surface)
     repeat
-      unit_number, display = next(storage.displays, storage.display_index)
-      storage.display_index = unit_number
+      unit_number, display = next(storage.displays[surface_index], storage.display_index[surface_index])
+      storage.display_index[surface_index] = unit_number
       if unit_number == nil then
-        storage.display_index = nil
         return
       end
     until display and storage.surfaces[display.surface.index]
-    if validate(display) then
-      update_display(display)
-    else
-      storage.displays[unit_number] = nil
-    end
+    update_display(display)
   end
 end
 
@@ -110,15 +137,6 @@ local function register_surface_displays(surface)
   end
 end
 
--- remove all displays on a surface
--- when a surface is deleted or cleared
-local function deregister_surface_displays(surface)
-  local displays = surface.find_entities_filtered { type = "display-panel" }
-  for _, display in pairs(displays) do
-    remove_display(display)
-  end
-end
-
 -- register the update tick
 local function register_events()
   script.on_nth_tick(nil)
@@ -129,13 +147,16 @@ function circuit_display.on_init()
   storage.displays = {}
   storage.display_signals = {}
   storage.surfaces = {}
-  storage.display_index = nil
+  storage.display_index = {}
+  storage.surface_index = nil
   storage.search_rich_text = settings.global["sigd-search-rich-text"].value
+
   --  find any existing displays
   for _, surface in pairs(game.surfaces) do
-    register_surface_displays(surface)
     -- create record of that surface
     storage.surfaces[surface.index] = false
+    storage.displays[surface.index] = {}
+    register_surface_displays(surface)
   end
   --  set surfaces with active players as active
   for _, player in pairs(game.players) do
@@ -258,7 +279,9 @@ end
 function circuit_display.on_surface_created(e)
   local surface = game.get_surface(e.surface_index)
   if not surface then return end
-  storage.surfaces[e.surface_index] = false
+  -- create record of that surface
+  storage.surfaces[surface.index] = false
+  storage.displays[surface.index] = {}
   register_surface_displays(surface)
   storage.surfaces[surface.index] = surface_has_players(surface)
 end
@@ -268,7 +291,7 @@ end
 function circuit_display.on_surface_deleted(e)
   if not e.surface_index then return end
   storage.surfaces[e.surface_index] = nil
-  deregister_surface_displays(game.get_surface(e.surface_index))
+  storage.displays[e.surface_index] = nil
 end
 
 local filter = { { filter = 'type', type = 'display-panel' } }

@@ -4,7 +4,7 @@ data:extend({
         name = "sigd-update-nth-tick",
         order = "aa",
         setting_type = "runtime-global",
-        default_value = 4,
+        default_value = 2,
         minimum_value = 1,
         maximum_value = 60, -- once per second
     },
