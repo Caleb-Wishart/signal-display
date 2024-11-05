@@ -364,12 +364,16 @@ function circuit_display.on_player_changed_surface(e)
   if not player then return end
   if e.surface_index then
     local surface = game.get_surface(e.surface_index)
-    if not surface then return end
+    if not surface then
+      return
+    end
     -- disable surface if no players are on it
     storage.surfaces[e.surface_index] = surface_has_players(surface)
   else
     -- remove surface if it was removed
-    storage.surfaces[e.surface_index] = nil
+    if storage.surfaces[e.surface_index] ~= nil then
+      storage.surfaces[e.surface_index] = nil
+    end
   end
   -- set current player surface as active
   storage.surfaces[player.surface.index] = true
