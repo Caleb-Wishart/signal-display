@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2024.11.05
+  Features:
+    - Use formatted numbers by default
+    - Add option to disable formatted numbers and use raw values instead
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2024.11.02
   Info:
