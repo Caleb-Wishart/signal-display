@@ -249,9 +249,6 @@ function circuit_display.on_player_changed_surface(e)
     if not surface then return end
     -- disable surface if no players are on it
     storage.surfaces[e.surface_index] = surface_has_players(surface)
-  else
-    -- remove surface if it was removed
-    storage.surfaces[e.surface_index] = nil
   end
   -- set current player surface as active
   storage.surfaces[player.surface.index] = true
