@@ -24,4 +24,11 @@ data:extend({
         setting_type = "runtime-global",
         default_value = false, -- disable this if you're experiencing lag spikes
     },
+    {
+        type = "bool-setting",
+        name = "sigd-show-formatted-number",
+        order = "ad",
+        setting_type = "runtime-global",
+        default_value = true, -- show with k, M, G, etc.
+    },
 })

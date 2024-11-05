@@ -1,3 +1,6 @@
+local flib_format = require("__flib__.format")
+local flib_migration = require("__flib__.migration")
+
 local circuit_display = {}
 
 -- check if the entity is a display panel
@@ -65,7 +68,10 @@ local function update_display(display)
 
     if signal ~= get_last_signal(display, icon_name) then
       storage.display_signals[display.unit_number][icon_name] = signal
-      text, n = text:gsub("%[%d*%]", "[" .. signal .. "]", 1)
+      if storage.show_formatted_number then
+        signal = flib_format.number(signal, true, 3)
+      end
+      text, n = text:gsub("%[[%dQRYZEPTGMk %.]*%]", "[" .. signal .. "]", 1)
       if n > 0 then
         updated = true
       end
@@ -84,8 +90,11 @@ local function update_display(display)
           goto next_match
         end
         storage.display_signals[display.unit_number][value] = signal
+        if storage.show_formatted_number then
+          signal = flib_format.number(signal, true, 3)
+        end
 
-        text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[%d*%])", "%1[" .. signal .. "]", 1)
+        text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.]*%])", "%1[" .. signal .. "]", 1)
         if n > 0 then
           updated = true
         end
@@ -150,6 +159,7 @@ function circuit_display.on_init()
   storage.display_index = {}
   storage.surface_index = nil
   storage.search_rich_text = settings.global["sigd-search-rich-text"].value
+  storage.show_formatted_number = settings.global["sigd-show-formatted-number"].value
 
   --  find any existing displays
   for _, surface in pairs(game.surfaces) do
@@ -272,6 +282,9 @@ function circuit_display.on_settings_changed(e)
   if e.setting == "sigd-search-rich-text" then
     storage.search_rich_text = settings.global["sigd-search-rich-text"].value
   end
+  if e.setting == "sigd-show-formatted-number" then
+    storage.show_formatted_number = settings.global["sigd-show-formatted-number"].value
+  end
 end
 
 -- register a new surface when created
@@ -329,7 +342,14 @@ script.on_load(function()
   register_events()
 end)
 
-script.on_configuration_changed(function()
+local migrations_by_version = {
+  ["1.1.0"] = function()
+    storage.show_formatted_number = true
+  end,
+}
+
+script.on_configuration_changed(function(e)
+  flib_migration.on_config_changed(e, migrations_by_version)
   if not storage then return end
   register_events()
 end)
