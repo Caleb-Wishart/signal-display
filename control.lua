@@ -3,6 +3,97 @@ local flib_migration = require("__flib__.migration")
 
 local circuit_display = {}
 
+-- Function to extract all attributes from a rich text string
+local function parseRichText(text)
+  local parts = {}
+  local currentSearchText = text
+
+  -- Trim the string until done
+  while currentSearchText ~= nil and #currentSearchText > 0 do
+    -- Get the next x=y parameter
+    local paramStart, paramEnd = string.find(currentSearchText, "[%w%-]+=[%w%-]+")
+
+    -- Nothing found so string is done
+    if (paramStart == nil or paramEnd == nil) then
+      currentSearchText = nil
+      break
+    end
+
+    -- Extract key and value and store it
+    local currentParam = string.sub(currentSearchText, paramStart, paramEnd)
+    for key, value in string.gmatch(currentParam, "([%w%-]+)=([%w%-]+)") do
+      parts[key] = value
+    end
+
+    -- Trim text by the part we just extracted
+    currentSearchText = string.sub(currentSearchText, paramEnd + 1, #currentSearchText)
+  end
+
+  return parts
+end
+
+
+-- Function to find all the rich texts inside a display string
+local function parseDisplayText(text)
+  local richTexts = {}
+  local currentSearchText = text
+
+  -- Search the text until done
+  while (currentSearchText ~= nil and #currentSearchText > 0) do
+    -- Strip the next rich text tag out e.g [item=rocket-turret,quality=rare]
+    local signalStart, signalEnd = string.find(currentSearchText, "%[[%w%-=,]+%]")
+
+    -- No rich text found, nothing left to do
+    if (signalStart == nil or signalEnd == nil) then
+      currentSearchText = nil
+      break
+    end
+
+    -- Extract the rich text and parse it
+    local currentSignal = string.sub(currentSearchText, signalStart, signalEnd)
+    table.insert(richTexts, parseRichText(currentSignal))
+
+    -- Trim text by the part we just extraced
+    currentSearchText = string.sub(currentSearchText, signalEnd + 1, #currentSearchText)
+  end
+
+  return richTexts
+end
+
+-- Function to be lazy and extend if any other signals need converting from one value to another
+local function convert(text)
+  local conversionTable = {
+    ["virtual-signal"] = "virtual",
+  }
+
+  if conversionTable[text] ~= nil then
+    return conversionTable[text]
+  end
+
+  return text
+end
+
+-- Function to find the prototype type of a given parsed rich text
+local function getType(params)
+  local types = {
+    "item",
+    "fluid",
+    "virtual-signal",
+    "entity",
+    "recipe",
+    "space-location",
+    "asteroid-chunk"
+  }
+
+  for _, value in pairs(types) do
+    if params[value] ~= null then
+      return value
+    end
+  end
+
+  return nil
+end
+
 -- check if the entity is a display panel
 local function validate(entity)
   return entity and entity.type == "display-panel" and entity.valid
@@ -79,30 +170,55 @@ local function update_display(display)
 
     -- Update based on rich text
     if storage.search_rich_text then
-      for typ, value in text:gmatch("%[([%w%-]+)=([%w%-]+)]") do
-        -- Update typ to match SignalIDType
-        if typ == "item" then typ = nil end
-        if typ == "virtual-signal" then typ = "virtual" end
-        signal = display.get_signal({ name = value, type = typ }, defines.wire_connector_id.circuit_green,
-          defines.wire_connector_id.circuit_red)
+      -- Parse the current line in to Rich Text blocks
+      local richTexts = parseDisplayText(text)
 
-        if value ~= icon_name and signal == get_last_signal(display, value) then
+      for _, richText in pairs(richTexts) do
+        -- Extract the type and value
+        local typ = getType(richText)
+        local value = richText[typ]
+
+        -- Not rich text, so skip it
+        if (typ == nil or value == nil) then
           goto next_match
         end
-        storage.display_signals[display.unit_number][value] = signal
+
+        -- Ensure type is correct
+        typ = convert(typ)
+
+        -- Initialise variables that can change based on Quality
+        local getSignalParams = {
+          name = value,
+          type = typ
+        }
+        local signalKey = value
+
+        -- Add quality in if detected
+        if (richText["quality"] ~= nil) then
+          getSignalParams["quality"] = richText["quality"]
+          signalKey = signalKey .. ",quality=" .. richText["quality"]
+        end
+
+
+        signal = display.get_signal(getSignalParams,
+          defines.wire_connector_id.circuit_green,
+          defines.wire_connector_id.circuit_red)
+
+        storage.display_signals[display.unit_number][signalKey] = signal
         if storage.show_formatted_number then
           signal = flib_format.number(signal, true, 3)
         end
 
-        text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.]*%])", "%1[" .. signal .. "]", 1)
+        text, n = text:gsub("(=" .. signalKey:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.]*%])", "%1[" .. signal .. "]",
+          1)
         if n > 0 then
           updated = true
         end
         :: next_match ::
       end
-    end
-    if updated then
-      control.set_message(i, { text = text, icon = icon, condition = message.condition })
+      if updated then
+        control.set_message(i, { text = text, icon = icon, condition = message.condition })
+      end
     end
     :: next_message ::
   end
