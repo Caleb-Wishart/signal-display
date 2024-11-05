@@ -64,6 +64,7 @@ end
 local function convert(text)
   local conversionTable = {
     ["virtual-signal"] = "virtual",
+    ["planet"] = "space-location"
   }
 
   if conversionTable[text] ~= nil then
