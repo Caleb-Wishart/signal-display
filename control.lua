@@ -82,7 +82,8 @@ local function getType(params)
     "entity",
     "recipe",
     "space-location",
-    "asteroid-chunk"
+    "asteroid-chunk",
+    "planet"
   }
 
   for _, value in pairs(types) do
