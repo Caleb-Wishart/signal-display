@@ -6,7 +6,7 @@ With this mod placing a pair of square brackets `[]` in the message of a Display
 
 You can also enable the use of rich text formatting in the mod settings to update any rich text item within the message. To get the amount of a rich text item it must be immediately followed by a pair of square brackets `[]`, for example `[item=iron-place][]`. You can have as many rich text items as you want in the message.
 
-Only displays that are on active surfaces will be updated. Under the context of the mod, an active surface is one any surface that a player is currently viewing.
+Only displays that are on active surfaces will be updated. Under the context of the mod, an active surface is any surface that a player is currently viewing.
 
 ## Examples
 
@@ -18,7 +18,8 @@ These displays can also be have the "Show in chart" option enabled to display th
 
 ![Map display](https://github.com/Caleb-Wishart/signal-display/raw/master/resources/map-view.png)
 
-Using these features it is possible to create easy displays to see view your space platform's current speed, the amount of fuel, or whatever you desire. The possibilities are endless!
+Using these features it is possible to create easy displays to see view your space platform's current speed, the amount of fuel, or whatever you desire.  
+The possibilities are endless!
 
 ![Space Platform Display](https://github.com/Caleb-Wishart/signal-display/raw/master/resources/space-platform-example.mp4)
 ![Space Platform Configuration](https://github.com/Caleb-Wishart/signal-display/raw/master/resources/ship-config.png)
