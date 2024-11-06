@@ -50,6 +50,99 @@ local function get_last_signal(display, signal)
     return storage.display_signals[display.unit_number][signal] or -1
 end
 
+-- Function to extract all attributes from a rich text string
+local function parseRichText(text)
+    local parts = {}
+    local currentSearchText = text
+
+    -- Trim the string until done
+    while currentSearchText ~= nil and #currentSearchText > 0 do
+        -- Get the next x=y parameter
+        local paramStart, paramEnd = string.find(currentSearchText, "[%w%-]+=[%w%-]+")
+
+        -- Nothing found so string is done
+        if (paramStart == nil or paramEnd == nil) then
+            currentSearchText = nil
+            break
+        end
+
+        -- Extract key and value and store it
+        local currentParam = string.sub(currentSearchText, paramStart, paramEnd)
+        for key, value in string.gmatch(currentParam, "([%w%-]+)=([%w%-]+)") do
+            parts[key] = value
+        end
+
+        -- Trim text by the part we just extracted
+        currentSearchText = string.sub(currentSearchText, paramEnd + 1, #currentSearchText)
+    end
+
+    return parts
+end
+
+
+-- Function to find all the rich texts inside a display string
+local function parseDisplayText(text)
+    local richTexts = {}
+    local currentSearchText = text
+
+    -- Search the text until done
+    while (currentSearchText ~= nil and #currentSearchText > 0) do
+        -- Strip the next rich text tag out e.g [item=rocket-turret,quality=rare]
+        local signalStart, signalEnd = string.find(currentSearchText, "%[[%w%-=,]+%]")
+
+        -- No rich text found, nothing left to do
+        if (signalStart == nil or signalEnd == nil) then
+            currentSearchText = nil
+            break
+        end
+
+        -- Extract the rich text and parse it
+        local currentSignal = string.sub(currentSearchText, signalStart, signalEnd)
+        table.insert(richTexts, parseRichText(currentSignal))
+
+        -- Trim text by the part we just extraced
+        currentSearchText = string.sub(currentSearchText, signalEnd + 1, #currentSearchText)
+    end
+
+    return richTexts
+end
+
+-- Function to be lazy and extend if any other signals need converting from one value to another
+local function convert(text)
+    local conversionTable = {
+        ["virtual-signal"] = "virtual",
+        ["planet"] = "space-location"
+    }
+
+    if conversionTable[text] ~= nil then
+        return conversionTable[text]
+    end
+
+    return text
+end
+
+-- Function to find the prototype type of a given parsed rich text
+local function getType(params)
+    local types = {
+        "item",
+        "fluid",
+        "virtual-signal",
+        "entity",
+        "recipe",
+        "space-location",
+        "asteroid-chunk",
+        "planet"
+    }
+
+    for _, value in pairs(types) do
+        if params[value] ~= null then
+            return value
+        end
+    end
+
+    return nil
+end
+
 -- update the display with the current signals
 function sigd_display.update_display(display)
     local control = display.get_or_create_control_behavior()
