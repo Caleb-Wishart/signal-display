@@ -77,6 +77,7 @@ local function text_to_signalID(type)
         ["entity"] = "entity",
         ["recipe"] = "recipe",
         ["planet"] = "space-location",
+        ["space-location"] = "space-location",
         -- Currently asteriods can not be used in rich text
         -- ["asteroid-chunk"] = "asteroid-chunk",
         ["quality"] = "quality"
