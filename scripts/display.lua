@@ -43,104 +43,46 @@ local function remove_display(display)
 end
 
 -- get last signal from a dispaly that was cached or -1 if not found
-local function get_last_signal(display, signal)
+---@param display LuaEntity display panel
+---@param signal string signal name
+---@param quality string? quality of this item
+---@return integer -1 if not found, else the last signal value
+local function get_last_signal(display, signal, quality)
     if not storage.display_signals or not storage.display_signals[display.unit_number] then
         return -1
     end
-    return storage.display_signals[display.unit_number][signal] or -1
+    local key = signal .. (quality and "-" .. quality or "")
+    return storage.display_signals[display.unit_number][key] or -1
 end
 
--- Function to extract all attributes from a rich text string
-local function parseRichText(text)
-    local parts = {}
-    local currentSearchText = text
-
-    -- Trim the string until done
-    while currentSearchText ~= nil and #currentSearchText > 0 do
-        -- Get the next x=y parameter
-        local paramStart, paramEnd = string.find(currentSearchText, "[%w%-]+=[%w%-]+")
-
-        -- Nothing found so string is done
-        if (paramStart == nil or paramEnd == nil) then
-            currentSearchText = nil
-            break
-        end
-
-        -- Extract key and value and store it
-        local currentParam = string.sub(currentSearchText, paramStart, paramEnd)
-        for key, value in string.gmatch(currentParam, "([%w%-]+)=([%w%-]+)") do
-            parts[key] = value
-        end
-
-        -- Trim text by the part we just extracted
-        currentSearchText = string.sub(currentSearchText, paramEnd + 1, #currentSearchText)
+-- set the last signal for a display
+---@param display LuaEntity display panel
+---@param signal string signal name
+---@param value integer value of the signal
+---@param quality string? quality of this item
+local function set_last_signal(display, signal, value, quality)
+    if not storage.display_signals or not storage.display_signals[display.unit_number] then
+        return
     end
-
-    return parts
+    local key = signal .. (quality and "-" .. quality or "")
+    storage.display_signals[display.unit_number][key] = value
 end
 
-
--- Function to find all the rich texts inside a display string
-local function parseDisplayText(text)
-    local richTexts = {}
-    local currentSearchText = text
-
-    -- Search the text until done
-    while (currentSearchText ~= nil and #currentSearchText > 0) do
-        -- Strip the next rich text tag out e.g [item=rocket-turret,quality=rare]
-        local signalStart, signalEnd = string.find(currentSearchText, "%[[%w%-=,]+%]")
-
-        -- No rich text found, nothing left to do
-        if (signalStart == nil or signalEnd == nil) then
-            currentSearchText = nil
-            break
-        end
-
-        -- Extract the rich text and parse it
-        local currentSignal = string.sub(currentSearchText, signalStart, signalEnd)
-        table.insert(richTexts, parseRichText(currentSignal))
-
-        -- Trim text by the part we just extraced
-        currentSearchText = string.sub(currentSearchText, signalEnd + 1, #currentSearchText)
-    end
-
-    return richTexts
-end
-
--- Function to be lazy and extend if any other signals need converting from one value to another
-local function convert(text)
-    local conversionTable = {
+-- convert rich richText Syntax to SignalIDType
+local function text_to_signalID(type)
+    local idMap = {
+        ["item"] = "item",
+        ["fluid"] = "fluid",
         ["virtual-signal"] = "virtual",
-        ["planet"] = "space-location"
+        ["entity"] = "entity",
+        ["recipe"] = "recipe",
+        ["planet"] = "space-location",
+        -- Currently asteriods can not be used in rich text
+        -- ["asteroid-chunk"] = "asteroid-chunk",
+        ["quality"] = "quality"
     }
 
-    if conversionTable[text] ~= nil then
-        return conversionTable[text]
-    end
-
-    return text
-end
-
--- Function to find the prototype type of a given parsed rich text
-local function getType(params)
-    local types = {
-        "item",
-        "fluid",
-        "virtual-signal",
-        "entity",
-        "recipe",
-        "space-location",
-        "asteroid-chunk",
-        "planet"
-    }
-
-    for _, value in pairs(types) do
-        if params[value] ~= null then
-            return value
-        end
-    end
-
-    return nil
+    return idMap[type]
 end
 
 -- update the display with the current signals
@@ -157,11 +99,12 @@ function sigd_display.update_display(display)
         -- Update based on icons
         local icon = message.icon
         local icon_name = icon and icon.name or "unset"
+        local icon_quality = icon.quality -- can be nil
         local signal = icon_name ~= "unset" and display.get_signal(icon, defines.wire_connector_id.circuit_green,
             defines.wire_connector_id.circuit_red) or 0
 
-        if signal ~= get_last_signal(display, icon_name) then
-            storage.display_signals[display.unit_number][icon_name] = signal
+        if signal ~= get_last_signal(display, icon_name, icon_quality) then
+            set_last_signal(display, icon_name, signal, icon_quality)
             if storage.show_formatted_number then
                 signal = flib_format.number(signal, true)
             end
@@ -173,22 +116,48 @@ function sigd_display.update_display(display)
 
         -- Update based on rich text
         if storage.search_rich_text then
-            for typ, value in text:gmatch("%[([%w%-]+)=([%w%-]+)]") do
+            for typ, value in text:gmatch("%[([%w%-]+)=([%w%-]+)%]") do
                 -- Update typ to match SignalIDType
-                if typ == "item" then typ = nil end
-                if typ == "virtual-signal" then typ = "virtual" end
-                signal = display.get_signal({ name = value, type = typ }, defines.wire_connector_id.circuit_green,
+                typ = text_to_signalID(typ)
+                if not typ then goto next_match end
+                signal = display.get_signal({ name = value, type = typ },
+                    defines.wire_connector_id.circuit_green,
                     defines.wire_connector_id.circuit_red)
 
                 if value ~= icon_name and signal == get_last_signal(display, value) then
                     goto next_match
                 end
-                storage.display_signals[display.unit_number][value] = signal
+                set_last_signal(display, value, signal)
                 if storage.show_formatted_number then
                     signal = flib_format.number(signal, true)
                 end
 
                 text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.]*%])",
+                    "%1[" .. signal .. "]", 1)
+                if n > 0 then
+                    updated = true
+                end
+                :: next_match ::
+            end
+            -- we have to do quality separately as there is not way to do optional groups in Lua patterns
+            for typ, value, quality in text:gmatch("%[([%w%-]+)=([%w%-]+),quality=([%w%-]+)%]") do
+                -- Update typ to match SignalIDType
+                typ = text_to_signalID(typ)
+                if not typ then goto next_match end
+                signal = display.get_signal({ name = value, type = typ, quality = quality },
+                    defines.wire_connector_id.circuit_green,
+                    defines.wire_connector_id.circuit_red)
+
+                if value ~= icon_name and quality ~= icon_quality and signal == get_last_signal(display, value, quality) then
+                    goto next_match
+                end
+                set_last_signal(display, value, signal, quality)
+                if storage.show_formatted_number then
+                    signal = flib_format.number(signal, true)
+                end
+                text, n = text:gsub(
+                    "(=" ..
+                    value:gsub("%-", "%%-") .. ",quality=" .. quality:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.]*%])",
                     "%1[" .. signal .. "]", 1)
                 if n > 0 then
                     updated = true
