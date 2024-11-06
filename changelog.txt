@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.3.0
+Date: 2024.11.06
+  Features:
+    - Adds support for signals with quality
+  Bugfixes:
+    - Clearing surface will no longer stop that surface from being updated
+    - Handle importing a surface with display panels already on it
+---------------------------------------------------------------------------------------------------
 Version: 1.2.0
 Date: 2024.11.06
   Bugfixes:
