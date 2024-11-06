@@ -99,7 +99,7 @@ function sigd_display.update_display(display)
         -- Update based on icons
         local icon = message.icon
         local icon_name = icon and icon.name or "unset"
-        local icon_quality = icon.quality -- can be nil
+        local icon_quality = icon and icon.quality or nil -- can be nil
         local signal = icon_name ~= "unset" and display.get_signal(icon, defines.wire_connector_id.circuit_green,
             defines.wire_connector_id.circuit_red) or 0
 
