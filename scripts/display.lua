@@ -173,15 +173,19 @@ function sigd_display.update_display(display)
     end
 end
 
+--- @alias  EntityBuilt EventData.on_built_entity | EventData.on_robot_built_entity | EventData.on_space_platform_built_entity | EventData.on_entity_cloned | EventData.script_raised_revive| EventData.script_raised_built
+
 -- register a new display when built
---- @param e EventData.on_built_entity|EventData.on_robot_built_entity|EventData.on_space_platform_built_entity |EventData.on_entity_cloned|EventData.script_raised_revive
+--- @param e EntityBuilt
 function sigd_display.on_display_created(e)
     local display = e.destination or e.entity
     add_display(display)
 end
 
+--- @alias  EntityDeleted EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.on_entity_died | EventData.script_raised_destroy
+
 -- remove a display when mined or destroyed
---- @param e EventData.on_pre_player_mined_item|EventData.on_robot_pre_mined|EventData.on_space_platform_mined_entity|EventData.on_entity_died|EventData.script_raised_destroy
+--- @param e EntityDeleted
 function sigd_display.on_display_deleted(e)
     local display = e.entity
     remove_display(display)
