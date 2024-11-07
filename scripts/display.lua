@@ -174,7 +174,7 @@ function sigd_display.update_display(display)
 end
 
 -- register a new display when built
---- @param e EventData.on_built_entity|EventData.on_robot_built_entity|EventData.on_space_platform_built_entity |EventData.on_entity_cloned|EventData.script_raised_revive
+--- @param e EventData.on_built_entity|EventData.on_robot_built_entity|EventData.on_space_platform_built_entity|EventData.on_entity_cloned|EventData.script_raised_revive|EventData.script_raised_built
 function sigd_display.on_display_created(e)
     local display = e.destination or e.entity
     add_display(display)

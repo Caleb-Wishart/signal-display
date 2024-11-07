@@ -18,6 +18,7 @@ script.on_event(defines.events.on_robot_built_entity, sigd_display.on_display_cr
 script.on_event(defines.events.on_space_platform_built_entity, sigd_display.on_display_created, filter)
 script.on_event(defines.events.on_entity_cloned, sigd_display.on_display_created, filter)
 script.on_event(defines.events.script_raised_revive, sigd_display.on_display_created, filter)
+script.on_event(defines.events.script_raised_built, sigd_display.on_display_created, filter)
 
 script.on_event(defines.events.on_pre_player_mined_item, sigd_display.on_display_deleted, filter)
 script.on_event(defines.events.on_robot_pre_mined, sigd_display.on_display_deleted, filter)
