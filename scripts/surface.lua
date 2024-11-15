@@ -48,6 +48,7 @@ end
 local function on_surface_cleared(e)
     if not e.surface_index then return end
     storage.displays[e.surface_index] = nil
+    storage.display_index[e.surface_index] = nil
 end
 
 sigd_surface.events = {

@@ -5,6 +5,9 @@ local by_version = {
     ["1.1.0"] = function()
         storage.show_formatted_number = true
     end,
+    ["1.4.0"] = function()
+        storage.display_index = {}
+    end
 }
 
 --- @param e ConfigurationChangedData

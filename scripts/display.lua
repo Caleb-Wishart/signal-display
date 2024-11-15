@@ -42,6 +42,13 @@ local function remove_display(display)
     end
 end
 
+-- make a key for the display signal cache
+---@param signal_name string signal name
+---@param quality string? quality of this item
+local function make_key(signal_name, quality)
+    return signal_name .. (quality and "-" .. quality or "")
+end
+
 -- get last signal from a dispaly that was cached or -1 if not found
 ---@param display LuaEntity display panel
 ---@param signal string signal name
@@ -51,20 +58,19 @@ local function get_last_signal(display, signal, quality)
     if not storage.display_signals or not storage.display_signals[display.unit_number] then
         return -1
     end
-    local key = signal .. (quality and "-" .. quality or "")
+    local key = make_key(signal, quality)
     return storage.display_signals[display.unit_number][key] or -1
 end
 
+
 -- set the last signal for a display
 ---@param display LuaEntity display panel
----@param signal string signal name
+---@param key string signal key
 ---@param value integer value of the signal
----@param quality string? quality of this item
-local function set_last_signal(display, signal, value, quality)
+local function set_last_signal(display, key, value)
     if not storage.display_signals or not storage.display_signals[display.unit_number] then
         return
     end
-    local key = signal .. (quality and "-" .. quality or "")
     storage.display_signals[display.unit_number][key] = value
 end
 
@@ -86,14 +92,41 @@ local function text_to_signalID(type)
     return idMap[type]
 end
 
+local function is_special(display, signal_name, value, condition)
+    local all = nil
+    if signal_name == "signal-everything" then
+        all = display.get_signals(defines.wire_connector_id.circuit_green,
+            defines.wire_connector_id.circuit_red)
+        if not all then return 0 end
+        local sum = 0
+        for _, signal in pairs(all) do
+            sum = sum + signal.count
+        end
+        return sum
+    end
+    if signal_name == "signal-each" then
+        all = display.get_signals(defines.wire_connector_id.circuit_green,
+            defines.wire_connector_id.circuit_red)
+        return all and #all or 0
+    end
+    if signal_name == "signal-anything" and condition and condition.first_signal and condition.first_signal.name == "signal-anything" then
+        all = display.get_signals(defines.wire_connector_id.circuit_green,
+            defines.wire_connector_id.circuit_red)
+        return all and all[1] and all[1].count or 0
+    end
+    return value
+end
+
 -- update the display with the current signals
 function sigd_display.update_display(display)
     local control = display.get_or_create_control_behavior()
     if not control then return end
-
+    local signal_cache = {}
     for i, message in pairs(control.messages) do
         local text = message.text
-        if not text or (message.condition and message.condition.fulfilled == false) then goto next_message end
+        -- currently the fulfilled value for a display panel is always nil
+        -- or (message.condition and message.condition.fulfilled == false)
+        if not text then goto next_message end
         local n = 0
         local updated = false
 
@@ -103,9 +136,11 @@ function sigd_display.update_display(display)
         local icon_quality = icon and icon.quality or nil -- can be nil
         local signal = icon_name ~= "unset" and display.get_signal(icon, defines.wire_connector_id.circuit_green,
             defines.wire_connector_id.circuit_red) or 0
+        signal = is_special(display, icon_name, signal, message.condition)
 
         if signal ~= get_last_signal(display, icon_name, icon_quality) then
-            set_last_signal(display, icon_name, signal, icon_quality)
+            local key = make_key(icon_name, icon_quality)
+            signal_cache[key] = signal
             if storage.show_formatted_number then
                 signal = flib_format.number(signal, true)
             end
@@ -124,11 +159,12 @@ function sigd_display.update_display(display)
                 signal = display.get_signal({ name = value, type = typ },
                     defines.wire_connector_id.circuit_green,
                     defines.wire_connector_id.circuit_red)
-
+                signal = is_special(display, value, signal, message.condition)
                 if value ~= icon_name and signal == get_last_signal(display, value) then
                     goto next_match
                 end
-                set_last_signal(display, value, signal)
+                local key = make_key(value)
+                signal_cache[key] = signal
                 if storage.show_formatted_number then
                     signal = flib_format.number(signal, true)
                 end
@@ -148,11 +184,13 @@ function sigd_display.update_display(display)
                 signal = display.get_signal({ name = value, type = typ, quality = quality },
                     defines.wire_connector_id.circuit_green,
                     defines.wire_connector_id.circuit_red)
+                signal = is_special(display, value, signal, message.condition)
 
                 if value ~= icon_name and quality ~= icon_quality and signal == get_last_signal(display, value, quality) then
                     goto next_match
                 end
-                set_last_signal(display, value, signal, quality)
+                local key = make_key(value, quality)
+                signal_cache[key] = signal
                 if storage.show_formatted_number then
                     signal = flib_format.number(signal, true)
                 end
@@ -170,6 +208,9 @@ function sigd_display.update_display(display)
             control.set_message(i, { text = text, icon = icon, condition = message.condition })
         end
         :: next_message ::
+    end
+    for key, signal in pairs(signal_cache) do
+        set_last_signal(display, key, signal)
     end
 end
 
