@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.4.0
+Date: 2024.11.06
+  Features:
+    - Add support for Anything, Everything [sum all], and Each [count unique] signals
+  Bugfixes:
+    - Fix crash due to invalid state after a surface is cleared
+    - Only cache a display's current signal values at the end of message processing
+---------------------------------------------------------------------------------------------------
 Version: 1.3.2
 Date: 2024.11.06
   Bugfixes:
