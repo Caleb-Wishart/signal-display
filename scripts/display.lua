@@ -74,6 +74,24 @@ local function set_last_signal(display, key, value)
     storage.display_signals[display.unit_number][key] = value
 end
 
+
+local function signalID_to_text(type)
+    if type == nil then
+        return "item"
+    end
+    local idMap = {
+        ["item"] = "item",
+        ["fluid"] = "fluid",
+        ["virtual"] = "virtual-signal",
+        ["entity"] = "entity",
+        ["recipe"] = "recipe",
+        ["space-location"] = "space-location",
+        ["quality"] = "quality"
+    }
+
+    return idMap[type]
+end
+
 -- convert rich richText Syntax to SignalIDType
 local function text_to_signalID(type)
     local idMap = {
@@ -126,14 +144,35 @@ function sigd_display.update_display(display)
         local text = message.text
         -- currently the fulfilled value for a display panel is always nil
         -- or (message.condition and message.condition.fulfilled == false)
-        if not text then goto next_message end
         local n = 0
         local updated = false
 
         -- Update based on icons
         local icon = message.icon
         local icon_name = icon and icon.name or "unset"
+        if not text and icon_name ~= "sigd-signal-all" then goto next_message end
         local icon_quality = icon and icon.quality or nil -- can be nil
+        -- special all signal
+        if icon_name == "sigd-signal-all" then
+            local all = display.get_signals(defines.wire_connector_id.circuit_green,
+                defines.wire_connector_id.circuit_red)
+            if all == nil then goto next_message end
+            local text = ""
+            for _, signal in pairs(all) do
+                local key = make_key(signal.signal.name, signal.signal.quality)
+                signal_cache[key] = signal.count
+                local count = signal.count
+                if storage.show_formatted_number then
+                    count = flib_format.number(count, true)
+                end
+                local type = signalID_to_text(signal.signal.type)
+                local quality = signal.signal.quality and ",quality=" .. signal.signal.quality or ""
+                text = text .. "[" .. type .. "=" .. signal.signal.name .. quality .. "][" .. count .. "] "
+            end
+            control.set_message(i, { text = text, icon = icon, condition = message.condition })
+            goto next_message
+        end
+
         local signal = icon_name ~= "unset" and display.get_signal(icon, defines.wire_connector_id.circuit_green,
             defines.wire_connector_id.circuit_red) or 0
         signal = is_special(display, icon_name, signal, message.condition)
