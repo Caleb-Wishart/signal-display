@@ -144,7 +144,7 @@ function sigd_display.update_display(display)
             if storage.show_formatted_number then
                 signal = flib_format.number(signal, true)
             end
-            text, n = text:gsub("%[[%dQRYZEPTGMk %.]*%]", "[" .. signal .. "]", 1)
+            text, n = text:gsub("%[[%dQRYZEPTGMk %.%-]*%]", "[" .. signal .. "]", 1)
             if n > 0 then
                 updated = true
             end
@@ -169,7 +169,7 @@ function sigd_display.update_display(display)
                     signal = flib_format.number(signal, true)
                 end
 
-                text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.]*%])",
+                text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
                     "%1[" .. signal .. "]", 1)
                 if n > 0 then
                     updated = true
@@ -196,7 +196,8 @@ function sigd_display.update_display(display)
                 end
                 text, n = text:gsub(
                     "(=" ..
-                    value:gsub("%-", "%%-") .. ",quality=" .. quality:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.]*%])",
+                    value:gsub("%-", "%%-") ..
+                    ",quality=" .. quality:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
                     "%1[" .. signal .. "]", 1)
                 if n > 0 then
                     updated = true
