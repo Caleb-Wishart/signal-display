@@ -1,6 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.4.1
+Date: 2024.11.18
+  Bugfixes:
+    - Correctly handle updating signals that can contain negative numbers
+---------------------------------------------------------------------------------------------------
 Version: 1.4.0
-Date: 2024.11.06
+Date: 2024.11.15
   Features:
     - Add support for Anything, Everything [sum all], and Each [count unique] signals
   Bugfixes:
