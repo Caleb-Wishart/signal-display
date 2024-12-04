@@ -21,6 +21,10 @@ local function on_tick(e)
         local unit_number, display = nil, nil
         -- find the next display to update (on an active surface)
         repeat
+            -- In the case the surface is mutated while iterating, we need to check if the display is still valid
+            if storage.displays[surface_index] == nil then
+                return
+            end
             unit_number, display = next(storage.displays[surface_index], storage.display_index[surface_index])
             storage.display_index[surface_index] = unit_number
             if unit_number == nil then
