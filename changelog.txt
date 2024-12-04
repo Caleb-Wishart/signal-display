@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.4.2
+Date: 2024.12.04
+  Bugfixes:
+    - Add addition check to prevent crash with a surface is updated while it is being checked for displays
+---------------------------------------------------------------------------------------------------
 Version: 1.4.1
 Date: 2024.11.18
   Bugfixes:
