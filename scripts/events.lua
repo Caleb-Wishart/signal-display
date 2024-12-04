@@ -38,7 +38,9 @@ function sigd_events.register_events()
 end
 
 function sigd_events.on_load()
-    if not storage then return end
+    if not storage then
+        return
+    end
     sigd_events.register_events()
 end
 

@@ -10,7 +10,9 @@ end
 
 -- Register a dispaly for updates with the mod
 local function add_display(display)
-    if not validate(display) then return end
+    if not validate(display) then
+        return
+    end
     local surface_index = display.surface.index
     if not storage.displays then
         storage.displays = {}
@@ -26,14 +28,22 @@ end
 
 -- Remove a display from the mod updates
 local function remove_display(display)
-    if not display.unit_number or not display.surface then return end
-    if not storage.displays then return end
+    if not display.unit_number or not display.surface then
+        return
+    end
+    if not storage.displays then
+        return
+    end
 
     local surface_index = display.surface.index
-    if not storage.displays[surface_index] then return end
+    if not storage.displays[surface_index] then
+        return
+    end
     storage.displays[surface_index][display.unit_number] = nil
 
-    if not storage.display_signals then return end
+    if not storage.display_signals then
+        return
+    end
     storage.display_signals[display.unit_number] = nil
 
     -- if this was the last display on the surface, restart from begining
@@ -62,7 +72,6 @@ local function get_last_signal(display, signal, quality)
     return storage.display_signals[display.unit_number][key] or -1
 end
 
-
 -- set the last signal for a display
 ---@param display LuaEntity display panel
 ---@param key string signal key
@@ -86,7 +95,7 @@ local function text_to_signalID(type)
         ["space-location"] = "space-location",
         -- Currently asteriods can not be used in rich text
         -- ["asteroid-chunk"] = "asteroid-chunk",
-        ["quality"] = "quality"
+        ["quality"] = "quality",
     }
 
     return idMap[type]
@@ -95,9 +104,10 @@ end
 local function is_special(display, signal_name, value, condition)
     local all = nil
     if signal_name == "signal-everything" then
-        all = display.get_signals(defines.wire_connector_id.circuit_green,
-            defines.wire_connector_id.circuit_red)
-        if not all then return 0 end
+        all = display.get_signals(defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red)
+        if not all then
+            return 0
+        end
         local sum = 0
         for _, signal in pairs(all) do
             sum = sum + signal.count
@@ -105,13 +115,16 @@ local function is_special(display, signal_name, value, condition)
         return sum
     end
     if signal_name == "signal-each" then
-        all = display.get_signals(defines.wire_connector_id.circuit_green,
-            defines.wire_connector_id.circuit_red)
+        all = display.get_signals(defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red)
         return all and #all or 0
     end
-    if signal_name == "signal-anything" and condition and condition.first_signal and condition.first_signal.name == "signal-anything" then
-        all = display.get_signals(defines.wire_connector_id.circuit_green,
-            defines.wire_connector_id.circuit_red)
+    if
+        signal_name == "signal-anything"
+        and condition
+        and condition.first_signal
+        and condition.first_signal.name == "signal-anything"
+    then
+        all = display.get_signals(defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red)
         return all and all[1] and all[1].count or 0
     end
     return value
@@ -120,13 +133,17 @@ end
 -- update the display with the current signals
 function sigd_display.update_display(display)
     local control = display.get_or_create_control_behavior()
-    if not control then return end
+    if not control then
+        return
+    end
     local signal_cache = {}
     for i, message in pairs(control.messages) do
         local text = message.text
         -- currently the fulfilled value for a display panel is always nil
         -- or (message.condition and message.condition.fulfilled == false)
-        if not text then goto next_message end
+        if not text then
+            goto next_message
+        end
         local n = 0
         local updated = false
 
@@ -134,8 +151,13 @@ function sigd_display.update_display(display)
         local icon = message.icon
         local icon_name = icon and icon.name or "unset"
         local icon_quality = icon and icon.quality or nil -- can be nil
-        local signal = icon_name ~= "unset" and display.get_signal(icon, defines.wire_connector_id.circuit_green,
-            defines.wire_connector_id.circuit_red) or 0
+        local signal = icon_name ~= "unset"
+                and display.get_signal(
+                    icon,
+                    defines.wire_connector_id.circuit_green,
+                    defines.wire_connector_id.circuit_red
+                )
+            or 0
         signal = is_special(display, icon_name, signal, message.condition)
 
         if signal ~= get_last_signal(display, icon_name, icon_quality) then
@@ -155,10 +177,14 @@ function sigd_display.update_display(display)
             for typ, value in text:gmatch("%[([%w%-]+)=([%w%-]+)%]") do
                 -- Update typ to match SignalIDType
                 typ = text_to_signalID(typ)
-                if not typ then goto next_match end
-                signal = display.get_signal({ name = value, type = typ },
+                if not typ then
+                    goto next_match
+                end
+                signal = display.get_signal(
+                    { name = value, type = typ },
                     defines.wire_connector_id.circuit_green,
-                    defines.wire_connector_id.circuit_red)
+                    defines.wire_connector_id.circuit_red
+                )
                 signal = is_special(display, value, signal, message.condition)
                 if value ~= icon_name and signal == get_last_signal(display, value) then
                     goto next_match
@@ -169,24 +195,35 @@ function sigd_display.update_display(display)
                     signal = flib_format.number(signal, true)
                 end
 
-                text, n = text:gsub("(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
-                    "%1[" .. signal .. "]", 1)
+                text, n = text:gsub(
+                    "(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
+                    "%1[" .. signal .. "]",
+                    1
+                )
                 if n > 0 then
                     updated = true
                 end
-                :: next_match ::
+                ::next_match::
             end
             -- we have to do quality separately as there is not way to do optional groups in Lua patterns
             for typ, value, quality in text:gmatch("%[([%w%-]+)=([%w%-]+),quality=([%w%-]+)%]") do
                 -- Update typ to match SignalIDType
                 typ = text_to_signalID(typ)
-                if not typ then goto next_match end
-                signal = display.get_signal({ name = value, type = typ, quality = quality },
+                if not typ then
+                    goto next_match
+                end
+                signal = display.get_signal(
+                    { name = value, type = typ, quality = quality },
                     defines.wire_connector_id.circuit_green,
-                    defines.wire_connector_id.circuit_red)
+                    defines.wire_connector_id.circuit_red
+                )
                 signal = is_special(display, value, signal, message.condition)
 
-                if value ~= icon_name and quality ~= icon_quality and signal == get_last_signal(display, value, quality) then
+                if
+                    value ~= icon_name
+                    and quality ~= icon_quality
+                    and signal == get_last_signal(display, value, quality)
+                then
                     goto next_match
                 end
                 local key = make_key(value, quality)
@@ -195,20 +232,24 @@ function sigd_display.update_display(display)
                     signal = flib_format.number(signal, true)
                 end
                 text, n = text:gsub(
-                    "(=" ..
-                    value:gsub("%-", "%%-") ..
-                    ",quality=" .. quality:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
-                    "%1[" .. signal .. "]", 1)
+                    "(="
+                        .. value:gsub("%-", "%%-")
+                        .. ",quality="
+                        .. quality:gsub("%-", "%%-")
+                        .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
+                    "%1[" .. signal .. "]",
+                    1
+                )
                 if n > 0 then
                     updated = true
                 end
-                :: next_match ::
+                ::next_match::
             end
         end
         if updated then
             control.set_message(i, { text = text, icon = icon, condition = message.condition })
         end
-        :: next_message ::
+        ::next_message::
     end
     for key, signal in pairs(signal_cache) do
         set_last_signal(display, key, signal)

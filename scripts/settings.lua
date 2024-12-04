@@ -6,7 +6,9 @@ local sigd_settings = {}
 -- update the settings when they are changed
 --- @param e EventData.on_runtime_mod_setting_changed
 local function on_settings_changed(e)
-    if not e then return end
+    if not e then
+        return
+    end
     if e.setting == "sigd-updates-per-tick" then
         -- only update if the update nth tick is 1
         if storage.update_nth_tick == 1 then

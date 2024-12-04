@@ -7,13 +7,15 @@ local by_version = {
     end,
     ["1.4.0"] = function()
         storage.display_index = {}
-    end
+    end,
 }
 
 --- @param e ConfigurationChangedData
 local function on_configuration_changed(e)
     flib_migration.on_config_changed(e, by_version)
-    if not storage then return end
+    if not storage then
+        return
+    end
     sigd_events.register_events()
 end
 

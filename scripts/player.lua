@@ -7,7 +7,9 @@ local sigd_player = {}
 --- @param e EventData.on_player_created
 local function on_player_created(e)
     local player = game.get_player(e.player_index)
-    if not player then return end
+    if not player then
+        return
+    end
     if not storage.surfaces then
         storage.surfaces = {}
     end
@@ -20,10 +22,14 @@ end
 --- @param e EventData.on_player_changed_surface
 local function on_player_changed_surface(e)
     local player = game.get_player(e.player_index)
-    if not player then return end
+    if not player then
+        return
+    end
     if e.surface_index then
         local surface = game.get_surface(e.surface_index)
-        if not surface then return end
+        if not surface then
+            return
+        end
         -- disable surface if no players are on it
         storage.surfaces[e.surface_index] = sigd_surfcace.surface_has_players(surface)
     end
@@ -35,7 +41,9 @@ end
 --- @param e EventData.on_player_joined_game
 local function on_player_joined_game(e)
     local player = game.get_player(e.player_index)
-    if not player then return end
+    if not player then
+        return
+    end
     storage.surfaces[player.surface.index] = true
 end
 
@@ -43,7 +51,9 @@ end
 --- @param e EventData.on_player_left_game
 local function on_player_left_game(e)
     local player = game.get_player(e.player_index)
-    if not player then return end
+    if not player then
+        return
+    end
     storage.surfaces[player.surface.index] = sigd_surfcace.surface_has_players(player.surface)
 end
 
