@@ -12,7 +12,8 @@ handler.add_libraries({
 
 -- The Event Handler library does not support events with filters, so we have to use the vanilla API for these events.
 
-local filter = { { filter = "type", type = "display-panel" } }
+local filter =
+    { { filter = "type", type = "display-panel" }, { mode = "or", filter = "type", type = "programmable-speaker" } }
 script.on_event(defines.events.on_built_entity, sigd_display.on_display_created, filter)
 script.on_event(defines.events.on_robot_built_entity, sigd_display.on_display_created, filter)
 script.on_event(defines.events.on_space_platform_built_entity, sigd_display.on_display_created, filter)

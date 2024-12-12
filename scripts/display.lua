@@ -5,7 +5,7 @@ local sigd_display = {}
 
 -- Ensure this entity is a valid display panel
 local function validate(entity)
-    return entity and entity.type == "display-panel" and entity.valid
+    return entity and (entity.type == "display-panel" or entity.type == "programmable-speaker") and entity.valid
 end
 
 -- Register a dispaly for updates with the mod
@@ -137,6 +137,19 @@ function sigd_display.update_display(display)
         return
     end
     local signal_cache = {}
+    local isSpeaker = display.type == "programmable-speaker"
+    if isSpeaker then
+        local params = display.alert_parameters
+        if not params or (params and not params.show_alert) then
+            return
+        end
+        -- Transform into array[DisplayPanelMessageDefinition] as if control was LuaDisplayPanelControlBehavior
+        control = {
+            messages = {
+                { text = params.alert_message, icon = params.icon_signal_id, condition = control.circuit_condition },
+            },
+        }
+    end
     for i, message in pairs(control.messages) do
         local text = message.text
         -- currently the fulfilled value for a display panel is always nil
@@ -247,7 +260,13 @@ function sigd_display.update_display(display)
             end
         end
         if updated then
-            control.set_message(i, { text = text, icon = icon, condition = message.condition })
+            if not isSpeaker then -- Display Panel
+                control.set_message(i, { text = text, icon = icon, condition = message.condition })
+            else -- Programmable Speaker
+                local alert_parameters = display.alert_parameters
+                alert_parameters.alert_message = text
+                display.alert_parameters = alert_parameters
+            end
         end
         ::next_message::
     end

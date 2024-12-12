@@ -10,6 +10,10 @@ function sigd_surface.register_surface_displays(surface)
     for _, display in pairs(displays) do
         sigd_display.add_display(display)
     end
+    local speakers = surface.find_entities_filtered({ type = "programmable-speaker" })
+    for _, speaker in pairs(speakers) do
+        sigd_display.add_display(speaker)
+    end
 end
 
 -- check if a surface has any active players on it (connected)
