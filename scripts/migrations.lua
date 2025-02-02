@@ -8,6 +8,11 @@ local by_version = {
     ["1.4.0"] = function()
         storage.display_index = {}
     end,
+    ["1.5.1"] = function()
+        -- Reset display_index to fix a bug with the display_index not being 
+        -- updated when a service is removed and that surface index is reused
+        storage.display_index = {}
+    end,
 }
 
 --- @param e ConfigurationChangedData

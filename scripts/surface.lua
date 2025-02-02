@@ -49,6 +49,7 @@ local function on_surface_deleted(e)
     end
     storage.surfaces[e.surface_index] = nil
     storage.displays[e.surface_index] = nil
+    storage.display_index[e.surface_index] = nil
 end
 
 -- remove all entities from a cleared surface
