@@ -8,7 +8,7 @@ local function validate(entity)
     return entity and (entity.type == "display-panel" or entity.type == "programmable-speaker") and entity.valid
 end
 
--- Register a dispaly for updates with the mod
+-- Register a display for updates with the mod
 local function add_display(display)
     if not validate(display) then
         return
@@ -23,6 +23,7 @@ local function add_display(display)
     end
 
     storage.displays[surface_index][display.unit_number] = display
+    -- Create signal cache
     storage.display_signals[display.unit_number] = {}
 end
 
@@ -46,7 +47,7 @@ local function remove_display(display)
     end
     storage.display_signals[display.unit_number] = nil
 
-    -- if this was the last display on the surface, restart from begining
+    -- if this was the last display on the surface, restart from beginning
     if storage.display_index[surface_index] == display.unit_number then
         storage.display_index[surface_index] = nil
     end
@@ -59,7 +60,7 @@ local function make_key(signal_name, quality)
     return signal_name .. (quality and "-" .. quality or "")
 end
 
--- get last signal from a dispaly that was cached or -1 if not found
+-- get last signal from a display that was cached or -1 if not found
 ---@param display LuaEntity display panel
 ---@param signal string signal name
 ---@param quality string? quality of this item
@@ -93,7 +94,7 @@ local function text_to_signalID(type)
         ["recipe"] = "recipe",
         ["planet"] = "space-location",
         ["space-location"] = "space-location",
-        -- Currently asteriods can not be used in rich text
+        -- Currently asteroids can not be used in rich text
         -- ["asteroid-chunk"] = "asteroid-chunk",
         ["quality"] = "quality",
     }
@@ -101,6 +102,7 @@ local function text_to_signalID(type)
     return idMap[type]
 end
 
+-- handle special signals that require custom logic, such as signal-everything, signal-each, and signal-anything
 local function is_special(display, signal_name, value, condition)
     local all = nil
     if signal_name == "signal-everything" then
@@ -165,11 +167,11 @@ function sigd_display.update_display(display)
         local icon_name = icon and icon.name or "unset"
         local icon_quality = icon and icon.quality or nil -- can be nil
         local signal = icon_name ~= "unset"
-                and display.get_signal(
-                    icon,
-                    defines.wire_connector_id.circuit_green,
-                    defines.wire_connector_id.circuit_red
-                )
+            and display.get_signal(
+                icon,
+                defines.wire_connector_id.circuit_green,
+                defines.wire_connector_id.circuit_red
+            )
             or 0
         signal = is_special(display, icon_name, signal, message.condition)
 
@@ -246,10 +248,10 @@ function sigd_display.update_display(display)
                 end
                 text, n = text:gsub(
                     "(="
-                        .. value:gsub("%-", "%%-")
-                        .. ",quality="
-                        .. quality:gsub("%-", "%%-")
-                        .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
+                    .. value:gsub("%-", "%%-")
+                    .. ",quality="
+                    .. quality:gsub("%-", "%%-")
+                    .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
                     "%1[" .. signal .. "]",
                     1
                 )
@@ -262,7 +264,7 @@ function sigd_display.update_display(display)
         if updated then
             if not isSpeaker then -- Display Panel
                 control.set_message(i, { text = text, icon = icon, condition = message.condition })
-            else -- Programmable Speaker
+            else                  -- Programmable Speaker
                 local alert_parameters = display.alert_parameters
                 alert_parameters.alert_message = text
                 display.alert_parameters = alert_parameters

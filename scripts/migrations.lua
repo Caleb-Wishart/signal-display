@@ -9,9 +9,17 @@ local by_version = {
         storage.display_index = {}
     end,
     ["1.5.1"] = function()
-        -- Reset display_index to fix a bug with the display_index not being 
+        -- Reset display_index to fix a bug with the display_index not being
         -- updated when a service is removed and that surface index is reused
         storage.display_index = {}
+    end,
+    ["1.5.2"] = function()
+        -- handle internal variable renames
+        storage.displays_to_update_per_tick = storage.updates_per_tick or 1
+        storage.updates_per_tick = nil
+
+        storage.update_every_nth_tick = storage.update_nth_tick or 1
+        storage.update_nth_tick = nil
     end,
 }
 

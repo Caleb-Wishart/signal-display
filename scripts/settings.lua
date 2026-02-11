@@ -10,21 +10,22 @@ local function on_settings_changed(e)
         return
     end
     if e.setting == "sigd-updates-per-tick" then
-        -- only update if the update nth tick is 1
-        if storage.update_nth_tick == 1 then
-            storage.updates_per_tick = settings.global["sigd-updates-per-tick"].value
+        -- we can only choose to update more than 1 display per tick if we are updating every tick
+        if storage.update_every_nth_tick == 1 then
+            storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
         else
-            storage.updates_per_tick = 1
+            storage.displays_to_update_per_tick = 1
         end
     end
     if e.setting == "sigd-update-nth-tick" then
-        storage.update_nth_tick = settings.global["sigd-update-nth-tick"].value
-        if storage.update_nth_tick == 1 then
-            storage.updates_per_tick = settings.global["sigd-updates-per-tick"].value
+        storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value
+        -- if we are now updating every tick, update the displays_to_update_per_tick to match the setting
+        if storage.update_every_nth_tick == 1 then
+            storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
         else
-            storage.updates_per_tick = 1
+            storage.displays_to_update_per_tick = 1
         end
-        sigd_events.register_events()
+        sigd_events.register_events() -- re-register the on_nth_tick event with the new tick rate
     end
     if e.setting == "sigd-search-rich-text" then
         storage.search_rich_text = settings.global["sigd-search-rich-text"].value
