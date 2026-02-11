@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.5.2
+Date: 2026.02.11
+  Bugfixes:
+    - Fix crash when iterating over a display that has become invalid
+  Locale:
+    - Update setting names and descriptions to be clearer about their purpose
+  Scripting:
+    - renamed internal variables used for controlling display update frequency
+---------------------------------------------------------------------------------------------------
 Version: 1.5.1
 Date: 2025.02.02
   Bugfixes:

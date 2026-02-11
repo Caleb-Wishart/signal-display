@@ -1,12 +1,18 @@
 {
   "name": "signal-display",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "title": "Signal Display",
   "author": "AckEmma",
   "factorio_version": "2.0",
   "description": "Allows Display Panels and Programmable Speakers to show the count associated with a signal from the circuit network.",
-  "dependencies": ["base", "flib"],
+  "dependencies": [
+    "base",
+    "flib"
+  ],
   "package": {
-    "ignore": ["resources/*", "stylua.toml"]
+    "ignore": [
+      "resources/*",
+      "stylua.toml"
+    ]
   }
 }
