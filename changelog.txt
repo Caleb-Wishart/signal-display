@@ -1,8 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.5.3
+Date: 2026.03.07
+  Bugfixes:
+    - Fix crash when display text contains invalid rich text tags
+---------------------------------------------------------------------------------------------------
 Version: 1.5.2
 Date: 2026.02.11
   Bugfixes:
     - Fix crash when iterating over a display that has become invalid
+    - Display text will force update when text is manually changed
   Locale:
     - Update setting names and descriptions to be clearer about their purpose
   Scripting:
