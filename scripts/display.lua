@@ -189,17 +189,21 @@ function sigd_display.update_display(display)
 
         -- Update based on rich text
         if storage.search_rich_text then
+            local success = true
             for typ, value in text:gmatch("%[([%w%-]+)=([%w%-]+)%]") do
                 -- Update typ to match SignalIDType
                 typ = text_to_signalID(typ)
                 if not typ then
                     goto next_match
                 end
-                signal = display.get_signal(
+                success, signal = pcall(display.get_signal,
                     { name = value, type = typ },
                     defines.wire_connector_id.circuit_green,
                     defines.wire_connector_id.circuit_red
                 )
+                if not success then
+                    goto next_match
+                end
                 signal = is_special(display, value, signal, message.condition)
                 if value ~= icon_name and signal == get_last_signal(display, value) then
                     goto next_match
@@ -227,11 +231,15 @@ function sigd_display.update_display(display)
                 if not typ then
                     goto next_match
                 end
-                signal = display.get_signal(
+                success, signal = pcall(display.get_signal,
                     { name = value, type = typ, quality = quality },
                     defines.wire_connector_id.circuit_green,
                     defines.wire_connector_id.circuit_red
                 )
+                if not success then
+                    goto next_match
+                end
+
                 signal = is_special(display, value, signal, message.condition)
 
                 if
