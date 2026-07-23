@@ -1,11 +1,11 @@
 local flib_format = require("__flib__.format")
 
---- @class sigd_display
+---@class sigd_display
 local sigd_display = {}
 
 -- Ensure this entity is a valid display panel
 local function validate(entity)
-    return entity and (entity.type == "display-panel" or entity.type == "programmable-speaker") and entity.valid
+    return entity and entity.valid and (entity.type == "display-panel" or entity.type == "programmable-speaker")
 end
 
 -- Register a display for updates with the mod
@@ -54,17 +54,17 @@ local function remove_display(display)
 end
 
 -- make a key for the display signal cache
----@param signal_name string signal name
----@param quality string? quality of this item
+---@param signal_name string  signal name
+---@param quality     string? quality of this item
 local function make_key(signal_name, quality)
     return signal_name .. (quality and "-" .. quality or "")
 end
 
 -- get last signal from a display that was cached or -1 if not found
 ---@param display LuaEntity display panel
----@param signal string signal name
----@param quality string? quality of this item
----@return integer -1 if not found, else the last signal value
+---@param signal  string    signal name
+---@param quality string?   quality of this item
+---@return integer - 1 if not found, else the last signal value
 local function get_last_signal(display, signal, quality)
     if not storage.display_signals or not storage.display_signals[display.unit_number] then
         return -1
@@ -75,8 +75,8 @@ end
 
 -- set the last signal for a display
 ---@param display LuaEntity display panel
----@param key string signal key
----@param value integer value of the signal
+---@param key     string    signal key
+---@param value   integer   value of the signal
 local function set_last_signal(display, key, value)
     if not storage.display_signals or not storage.display_signals[display.unit_number] then
         return
@@ -96,7 +96,7 @@ local function text_to_signalID(type)
         ["space-location"] = "space-location",
         -- Currently asteroids can not be used in rich text
         -- ["asteroid-chunk"] = "asteroid-chunk",
-        ["quality"] = "quality",
+        ["quality"] = "quality"
     }
 
     return idMap[type]
@@ -120,12 +120,8 @@ local function is_special(display, signal_name, value, condition)
         all = display.get_signals(defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red)
         return all and #all or 0
     end
-    if
-        signal_name == "signal-anything"
-        and condition
-        and condition.first_signal
-        and condition.first_signal.name == "signal-anything"
-    then
+    if signal_name == "signal-anything" and condition and condition.first_signal
+        and condition.first_signal.name == "signal-anything" then
         all = display.get_signals(defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red)
         return all and all[1] and all[1].count or 0
     end
@@ -148,8 +144,8 @@ function sigd_display.update_display(display)
         -- Transform into array[DisplayPanelMessageDefinition] as if control was LuaDisplayPanelControlBehavior
         control = {
             messages = {
-                { text = params.alert_message, icon = params.icon_signal_id, condition = control.circuit_condition },
-            },
+                { text = params.alert_message, icon = params.icon_signal_id, condition = control.circuit_condition }
+            }
         }
     end
     for i, message in pairs(control.messages) do
@@ -167,11 +163,7 @@ function sigd_display.update_display(display)
         local icon_name = icon and icon.name or "unset"
         local icon_quality = icon and icon.quality or nil -- can be nil
         local signal = icon_name ~= "unset"
-            and display.get_signal(
-                icon,
-                defines.wire_connector_id.circuit_green,
-                defines.wire_connector_id.circuit_red
-            )
+            and display.get_signal(icon, defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red)
             or 0
         signal = is_special(display, icon_name, signal, message.condition)
 
@@ -196,9 +188,8 @@ function sigd_display.update_display(display)
                 if not typ then
                     goto next_match
                 end
-                success, signal = pcall(display.get_signal,
-                    { name = value, type = typ },
-                    defines.wire_connector_id.circuit_green,
+                success, signal = pcall(
+                    display.get_signal, { name = value, type = typ }, defines.wire_connector_id.circuit_green,
                     defines.wire_connector_id.circuit_red
                 )
                 if not success then
@@ -215,9 +206,7 @@ function sigd_display.update_display(display)
                 end
 
                 text, n = text:gsub(
-                    "(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
-                    "%1[" .. signal .. "]",
-                    1
+                    "(=" .. value:gsub("%-", "%%-") .. "%])(%[[%dQRYZEPTGMk %.%-]*%])", "%1[" .. signal .. "]", 1
                 )
                 if n > 0 then
                     updated = true
@@ -231,10 +220,9 @@ function sigd_display.update_display(display)
                 if not typ then
                     goto next_match
                 end
-                success, signal = pcall(display.get_signal,
-                    { name = value, type = typ, quality = quality },
-                    defines.wire_connector_id.circuit_green,
-                    defines.wire_connector_id.circuit_red
+                success, signal = pcall(
+                    display.get_signal, { name = value, type = typ, quality = quality },
+                    defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red
                 )
                 if not success then
                     goto next_match
@@ -242,11 +230,7 @@ function sigd_display.update_display(display)
 
                 signal = is_special(display, value, signal, message.condition)
 
-                if
-                    value ~= icon_name
-                    and quality ~= icon_quality
-                    and signal == get_last_signal(display, value, quality)
-                then
+                if value ~= icon_name and quality ~= icon_quality and signal == get_last_signal(display, value, quality) then
                     goto next_match
                 end
                 local key = make_key(value, quality)
@@ -254,15 +238,9 @@ function sigd_display.update_display(display)
                 if storage.show_formatted_number then
                     signal = flib_format.number(signal, true)
                 end
-                text, n = text:gsub(
-                    "(="
-                    .. value:gsub("%-", "%%-")
-                    .. ",quality="
-                    .. quality:gsub("%-", "%%-")
-                    .. "%])(%[[%dQRYZEPTGMk %.%-]*%])",
-                    "%1[" .. signal .. "]",
-                    1
-                )
+                text, n = text:gsub("(=" .. value:gsub("%-", "%%-")
+                        .. ",quality=" .. quality:gsub("%-", "%%-")
+                        .. "%])(%[[%dQRYZEPTGMk %.%-]*%])", "%1[" .. signal .. "]", 1)
                 if n > 0 then
                     updated = true
                 end
@@ -272,7 +250,7 @@ function sigd_display.update_display(display)
         if updated then
             if not isSpeaker then -- Display Panel
                 control.set_message(i, { text = text, icon = icon, condition = message.condition })
-            else                  -- Programmable Speaker
+            else -- Programmable Speaker
                 local alert_parameters = display.alert_parameters
                 alert_parameters.alert_message = text
                 display.alert_parameters = alert_parameters
@@ -285,19 +263,19 @@ function sigd_display.update_display(display)
     end
 end
 
---- @alias  EntityBuilt EventData.on_built_entity | EventData.on_robot_built_entity | EventData.on_space_platform_built_entity | EventData.on_entity_cloned | EventData.script_raised_revive| EventData.script_raised_built
+---@alias EntityBuilt EventData.on_built_entity | EventData.on_robot_built_entity | EventData.on_space_platform_built_entity | EventData.on_entity_cloned | EventData.script_raised_revive | EventData.script_raised_built
 
 -- register a new display when built
---- @param e EntityBuilt
+---@param e EntityBuilt
 function sigd_display.on_display_created(e)
     local display = e.destination or e.entity
     add_display(display)
 end
 
---- @alias  EntityDeleted EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.on_entity_died | EventData.script_raised_destroy
+---@alias EntityDeleted EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.on_entity_died | EventData.script_raised_destroy
 
 -- remove a display when mined or destroyed
---- @param e EntityDeleted
+---@param e EntityDeleted
 function sigd_display.on_display_deleted(e)
     local display = e.entity
     remove_display(display)

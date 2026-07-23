@@ -1,12 +1,11 @@
 local sigd_surface = require("scripts.surface")
 local sigd_display = require("scripts.display")
 
---- @class sigd_events
+---@class sigd_events
 local sigd_events = {}
 
-
 -- each update tick designated as an update tick n (displays_to_update_per_tick) displays that are on active surfaces
---- @param e EventData.on_tick
+---@param e NthTickEventData
 local function on_tick(e)
     for _ = 1, storage.displays_to_update_per_tick, 1 do
         local surface_index, active = nil, nil
@@ -78,7 +77,7 @@ function sigd_events.on_init()
     end
     --  set up the update tick
     storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
-    storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value
+    storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value --[[@as MapTick]]
     if storage.update_every_nth_tick == 1 then
         storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
     else

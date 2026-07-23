@@ -1,10 +1,10 @@
 local sigd_events = require("scripts.events")
 
---- @class sigd_settings
+---@class sigd_settings
 local sigd_settings = {}
 
 -- update the settings when they are changed
---- @param e EventData.on_runtime_mod_setting_changed
+---@param e EventData.on_runtime_mod_setting_changed
 local function on_settings_changed(e)
     if not e then
         return
@@ -18,7 +18,7 @@ local function on_settings_changed(e)
         end
     end
     if e.setting == "sigd-update-nth-tick" then
-        storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value
+        storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value --[[@as MapTick]]
         -- if we are now updating every tick, update the displays_to_update_per_tick to match the setting
         if storage.update_every_nth_tick == 1 then
             storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
@@ -35,8 +35,6 @@ local function on_settings_changed(e)
     end
 end
 
-sigd_settings.events = {
-    [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
-}
+sigd_settings.events = { [defines.events.on_runtime_mod_setting_changed] = on_settings_changed }
 
 return sigd_settings

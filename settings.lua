@@ -6,7 +6,7 @@ data:extend({
 		setting_type = "runtime-global",
 		default_value = 2,
 		minimum_value = 1,
-		maximum_value = 60, -- once per second
+		maximum_value = 60 -- once per second
 	},
 	{
 		type = "int-setting",
@@ -15,20 +15,20 @@ data:extend({
 		setting_type = "runtime-global",
 		default_value = 10,
 		minimum_value = 1,
-		maximum_value = 100, -- processing too many displays per tick will produce lag spikes
+		maximum_value = 100 -- processing too many displays per tick will produce lag spikes
 	},
 	{
 		type = "bool-setting",
 		name = "sigd-search-rich-text",
 		order = "ac",
 		setting_type = "runtime-global",
-		default_value = false, -- disable this if you're experiencing lag spikes
+		default_value = false -- disable this if you're experiencing lag spikes
 	},
 	{
 		type = "bool-setting",
 		name = "sigd-show-formatted-number",
 		order = "ad",
 		setting_type = "runtime-global",
-		default_value = true, -- show with k, M, G, etc.
-	},
+		default_value = true -- show with k, M, G, etc.
+	}
 })
