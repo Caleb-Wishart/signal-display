@@ -11,8 +11,7 @@
   ],
   "package": {
     "ignore": [
-      "resources/*",
-      "stylua.toml"
+      "resources/*"
     ]
   }
 }
