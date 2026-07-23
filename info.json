@@ -1,9 +1,9 @@
 {
   "name": "signal-display",
-  "version": "1.5.3",
+  "version": "1.6.0",
   "title": "Signal Display",
   "author": "AckEmma",
-  "factorio_version": "2.0",
+  "factorio_version": "2.1",
   "description": "Allows Display Panels and Programmable Speakers to show the count associated with a signal from the circuit network.",
   "dependencies": [
     "base",
