@@ -30,5 +30,13 @@ data:extend({
 		order = "ad",
 		setting_type = "runtime-global",
 		default_value = true -- show with k, M, G, etc.
+	},
+	{
+		type = "int-setting",
+		name = "sigd-display-max-text-length",
+		order = "ba",
+		setting_type = "startup",
+		default_value = 10000,
+		minimum_value = 100
 	}
 })
