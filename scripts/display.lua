@@ -167,6 +167,27 @@ function sigd_display.update_display(display)
             or 0
         signal = is_special(display, icon_name, signal, message.condition)
 
+        if icon_name == "signal-each" then
+            local key = "signal-each"
+            local all = display.get_signals(
+                defines.wire_connector_id.circuit_green, defines.wire_connector_id.circuit_red
+            )
+            text = ""
+            for _, signal in pairs(all) do
+                local _type = signal.signal.type or "item"
+                if _type == "virtual" then
+                    _type = "virtual-signal"
+                end
+                text = text .. "[" .. _type .. "=" .. signal.signal.name
+                if signal.signal.quality then
+                    text = text .. ",quality=" .. signal.signal.quality
+                end
+                text = text .. "][" .. signal.count .. "]\t"
+            end
+            updated = true
+            goto update
+        end
+
         if signal ~= get_last_signal(display, icon_name, icon_quality) then
             local key = make_key(icon_name, icon_quality)
             signal_cache[key] = signal
@@ -247,6 +268,7 @@ function sigd_display.update_display(display)
                 ::next_match::
             end
         end
+        ::update::
         if updated then
             if not isSpeaker then -- Display Panel
                 control.set_record(i, { text = text, icon = icon, condition = message.condition })

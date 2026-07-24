@@ -3,6 +3,8 @@ Version: 2.0.0
 Date: 2026.07.24
   Features:
     - Add startup setting to allow configuration of display max text length. Default: 10000 
+  Changes:
+    - signal-each will not display all signals and their values, instead of the count of unique signals
   Info:
     - Updated display update logic inline with Factorio 2.1
 ---------------------------------------------------------------------------------------------------
