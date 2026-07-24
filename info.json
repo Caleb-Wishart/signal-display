@@ -6,7 +6,7 @@
   "factorio_version": "2.1",
   "description": "Allows Display Panels and Programmable Speakers to show the count associated with a signal from the circuit network.",
   "dependencies": [
-    "base",
+    "base >= 2.1.7",
     "flib"
   ],
   "package": {
