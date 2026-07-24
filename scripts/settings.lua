@@ -12,7 +12,7 @@ local function on_settings_changed(e)
     if e.setting == "sigd-updates-per-tick" then
         -- we can only choose to update more than 1 display per tick if we are updating every tick
         if storage.update_every_nth_tick == 1 then
-            storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
+            storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value --[[@as int]]
         else
             storage.displays_to_update_per_tick = 1
         end
@@ -21,7 +21,7 @@ local function on_settings_changed(e)
         storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value --[[@as MapTick]]
         -- if we are now updating every tick, update the displays_to_update_per_tick to match the setting
         if storage.update_every_nth_tick == 1 then
-            storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
+            storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value --[[@as int]]
         else
             storage.displays_to_update_per_tick = 1
         end

@@ -14,11 +14,17 @@ local by_version = {
     end,
     ["1.5.2"] = function ()
         -- handle internal variable renames
-        storage.displays_to_update_per_tick = storage.updates_per_tick or 1
-        storage.updates_per_tick = nil
-
-        storage.update_every_nth_tick = storage.update_nth_tick or 1
-        storage.update_nth_tick = nil
+        if not storage then
+            return
+        end
+        if not storage.displays_to_update_per_tick then
+            storage.displays_to_update_per_tick = storage.updates_per_tick or 1
+            storage.updates_per_tick = nil
+        end
+        if not storage.update_every_nth_tick then
+            storage.update_every_nth_tick = storage.update_nth_tick or 1
+            storage.update_nth_tick = nil
+        end
     end
 }
 
@@ -36,7 +42,7 @@ function migrations.on_configuration_changed(e)
     end
 
     for version, migration in pairs(by_version) do
-        if helpers.compare_versions(old_version, version) < 0 then
+        if helpers.compare_versions(old_version, version) <= 0 then
             migration()
         end
     end

@@ -76,7 +76,7 @@ function sigd_events.on_init()
         storage.surfaces[player.surface.index] = player.connected
     end
     --  set up the update tick
-    storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
+    storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value --[[@as int]]
     storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value --[[@as MapTick]]
     if storage.update_every_nth_tick == 1 then
         storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
