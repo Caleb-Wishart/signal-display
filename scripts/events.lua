@@ -79,7 +79,7 @@ function sigd_events.on_init()
     storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value --[[@as int]]
     storage.update_every_nth_tick = settings.global["sigd-update-nth-tick"].value --[[@as MapTick]]
     if storage.update_every_nth_tick == 1 then
-        storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value
+        storage.displays_to_update_per_tick = settings.global["sigd-updates-per-tick"].value --[[@as int]]
     else
         storage.displays_to_update_per_tick = 1
     end

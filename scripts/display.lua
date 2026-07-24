@@ -143,12 +143,12 @@ function sigd_display.update_display(display)
         end
         -- Transform into array[DisplayPanelMessageDefinition] as if control was LuaDisplayPanelControlBehavior
         control = {
-            messages = {
+            records = {
                 { text = params.alert_message, icon = params.icon_signal_id, condition = control.circuit_condition }
             }
         }
     end
-    for i, message in pairs(control.messages) do
+    for i, message in pairs(control.records) do
         local text = message.text
         -- currently the fulfilled value for a display panel is always nil
         -- or (message.condition and message.condition.fulfilled == false)
@@ -249,7 +249,7 @@ function sigd_display.update_display(display)
         end
         if updated then
             if not isSpeaker then -- Display Panel
-                control.set_message(i, { text = text, icon = icon, condition = message.condition })
+                control.set_record(i, { text = text, icon = icon, condition = message.condition })
             else -- Programmable Speaker
                 local alert_parameters = display.alert_parameters
                 alert_parameters.alert_message = text

@@ -3,6 +3,8 @@ Version: 2.0.0
 Date: 2026.07.24
   Features:
     - Add startup setting to allow configuration of display max text length. Default: 10000 
+  Info:
+    - Updated display update logic inline with Factorio 2.1
 ---------------------------------------------------------------------------------------------------
 Version: 1.5.3
 Date: 2026.03.07
